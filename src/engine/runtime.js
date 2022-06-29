@@ -399,6 +399,10 @@ class Runtime extends EventEmitter {
          * @type {?string}
          */
         this.origin = null;
+
+        // 记录坐标网格的 skinId 和 drawableId
+        this._coordinateSkinId = null;
+        this._coordinateDrawableId = null;
     }
 
     /**
@@ -608,7 +612,7 @@ class Runtime extends EventEmitter {
     static get PERIPHERAL_LIST_UPDATE () {
         return 'PERIPHERAL_LIST_UPDATE';
     }
-    
+
     /**
      * Event name for when the user picks a bluetooth device to connect to
      * via Companion Device Manager (CDM)
@@ -1562,6 +1566,41 @@ class Runtime extends EventEmitter {
      */
     attachAudioEngine (audioEngine) {
         this.audioEngine = audioEngine;
+    }
+
+    /**
+     * 创建坐标网格，并记录其 skinId 和 drawableId
+     */
+     _createCoordinate () {
+        this._coordinateSkinId = this.renderer.createCoordinateSkin();
+        this._coordinateDrawableId = this.renderer.createDrawable(StageLayering.BACKGROUND_LAYER);
+        this.renderer.updateDrawableSkinId(this._coordinateDrawableId, this._coordinateSkinId);
+    }
+
+    _setCheckerVisible (visible) {
+        this.renderer.setCheckerVisible(this._coordinateDrawableId, visible);
+    }
+
+    /**
+     * 修改坐标网格的显示或隐藏
+     */
+    triggerChecker (visible = false) {
+        if (!this.renderer) {
+            return;
+        }
+
+        if (this._coordinateSkinId === null) {
+            this._createChecker();
+        } else {
+            this._setCheckerVisible(visible);
+        }
+    }
+
+    /**
+     * 修改坐标网格的字体大小
+     */
+    setCheckerFontSize (fontSize) {
+        this.renderer.updateCoordinateSkinFontSize(this._coordinateSkinId, fontSize);
     }
 
     /**
