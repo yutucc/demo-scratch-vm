@@ -1577,29 +1577,29 @@ class Runtime extends EventEmitter {
         this.renderer.updateDrawableSkinId(this._coordinateDrawableId, this._coordinateSkinId);
     }
 
-    _setCheckerVisible (visible) {
-        this.renderer.setCheckerVisible(this._coordinateDrawableId, visible);
+    _setCoordinateVisible (visible) {
+        this.renderer.setCoordinateVisible(this._coordinateDrawableId, visible);
     }
 
     /**
      * 修改坐标网格的显示或隐藏
      */
-    triggerChecker (visible = false) {
+    triggerCoordinate (visible = false) {
         if (!this.renderer) {
             return;
         }
 
         if (this._coordinateSkinId === null) {
-            this._createChecker();
+            this._createCoordinate();
         } else {
-            this._setCheckerVisible(visible);
+            this._setCoordinateVisible(visible);
         }
     }
 
     /**
      * 修改坐标网格的字体大小
      */
-    setCheckerFontSize (fontSize) {
+    setCoordinateFontSize (fontSize) {
         this.renderer.updateCoordinateSkinFontSize(this._coordinateSkinId, fontSize);
     }
 
