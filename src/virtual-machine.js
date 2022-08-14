@@ -545,7 +545,8 @@ class VirtualMachine extends EventEmitter {
 
             // Select the first target for editing, e.g., the first sprite.
             if (wholeProject && (targets.length > 1)) {
-                this.editingTarget = targets[1];
+                // this.editingTarget = targets[1];
+                this.editingTarget = targets[0]; // 添加角色隐藏功能后，默认第一个加载的角色改成舞台的 target 对象，避免用户将第一个角色（targets[1]） 设置成隐藏角色
             } else {
                 this.editingTarget = targets[0];
             }
@@ -1082,6 +1083,31 @@ class VirtualMachine extends EventEmitter {
             newTarget.goBehindOther(target);
             this.setEditingTarget(newTarget.id);
         });
+    }
+
+    /**
+     * 设置角色（RenderedTarget 对象实例）的 isInvisible 状态
+     *      教师端的功能：可以控制该角色在学生端是否显示
+     * @param {string} targetId ID of a target whose sprite to duplicate.
+     * @param {bool} isInvisible
+     * @returns {Object} 返回该角色的 blocks，用于同步修改角色上积木的 isInvisible 状态
+     */
+    invisibleSprite (targetId, isInvisible) {
+        const target = this.runtime.getTargetById(targetId);
+
+        if (!target) {
+            throw new Error('No target with the provided id.');
+        } else if (!target.isSprite()) {
+            throw new Error('Cannot invisible non-sprite targets.');
+        } else if (!target.sprite) {
+            throw new Error('No sprite associated with this target.');
+        }
+
+        target.setIsInvisible(isInvisible);
+
+        this.emitTargetsUpdate();
+
+        return target.blocks;
     }
 
     /**

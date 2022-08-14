@@ -215,6 +215,18 @@ const serializeBlock = function (block) {
     if (block.comment) {
         obj.comment = block.comment;
     }
+
+    // 解析新加的这三种状态
+    if (block.deletable !== undefined) {
+        obj.deletable = block.deletable;
+    }
+    if (block.isLocking) {
+        obj.isLocking = block.isLocking;
+    }
+    if (block.isInvisible) {
+        obj.isInvisible = block.isInvisible;
+    }
+
     return obj;
 };
 
@@ -351,16 +363,16 @@ const serializeCostume = function (costume) {
 
     obj.bitmapResolution = costumeToSerialize.bitmapResolution;
     obj.dataFormat = costumeToSerialize.dataFormat.toLowerCase();
-    
+
     obj.assetId = costumeToSerialize.assetId;
-    
+
     // serialize this property with the name 'md5ext' because that's
     // what it's actually referring to. TODO runtime objects need to be
     // updated to actually refer to this as 'md5ext' instead of 'md5'
     // but that change should be made carefully since it is very
     // pervasive
     obj.md5ext = costumeToSerialize.md5;
-    
+
     obj.rotationCenterX = costumeToSerialize.rotationCenterX;
     obj.rotationCenterY = costumeToSerialize.rotationCenterY;
 
@@ -375,7 +387,7 @@ const serializeCostume = function (costume) {
 const serializeSound = function (sound) {
     const obj = Object.create(null);
     obj.name = sound.name;
-    
+
     const soundToSerialize = sound.broken || sound;
 
     obj.assetId = soundToSerialize.assetId;
@@ -488,6 +500,7 @@ const serializeTarget = function (target, extensions) {
         obj.direction = target.direction;
         obj.draggable = target.draggable;
         obj.rotationStyle = target.rotationStyle;
+        obj.isInvisible = target.isInvisible; // 新增 isInvisible 属性
     }
 
     // Add found extensions to the extensions object
@@ -1086,6 +1099,12 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets) {
     if (object.hasOwnProperty('draggable')) {
         target.draggable = object.draggable;
     }
+
+    // 新增 isInvisible 属性
+    if (object.hasOwnProperty('isInvisible')) {
+        target.isInvisible = object.isInvisible;
+    }
+
     Promise.all(costumePromises).then(costumes => {
         sprite.costumes = costumes;
     });

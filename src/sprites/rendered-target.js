@@ -102,6 +102,12 @@ class RenderedTarget extends Target {
         this.visible = true;
 
         /**
+         * 这个变量是控制当前目标是否需要隐藏（教师端操作隐藏角色的功能，该功能会将角色在角色列表中隐藏掉，并且该角色中的积木都添加隐藏状态）
+         * @type {boolean}
+         */
+        this.isInvisible = false;
+
+        /**
          * Size of rendered target as a percent of costume size.
          * @type {number}
          */
@@ -357,6 +363,14 @@ class RenderedTarget extends Target {
             }
         }
         this.runtime.requestTargetsUpdate(this);
+    }
+
+    /**
+     * 设置 isInvisible 属性
+     * @param {Boolean} isInvisible
+     */
+    setIsInvisible (isInvisible) {
+        this.isInvisible = isInvisible;
     }
 
     /**
@@ -1087,8 +1101,8 @@ class RenderedTarget extends Target {
             tempo: this.tempo,
             volume: this.volume,
             videoTransparency: this.videoTransparency,
-            videoState: this.videoState
-
+            videoState: this.videoState,
+            isInvisible: this.isInvisible,
         };
     }
 
