@@ -913,6 +913,12 @@ const parseScratchAssets = function (object, runtime, zip) {
             costumeSource.md5ext : `${costumeSource.assetId}.${dataFormat}`;
         costume.md5 = costumeMd5Ext;
         costume.dataFormat = dataFormat;
+
+        // 如果有 originAsset 字段（保存背景原图的 Asset 资源对象信息（assetId）），带上
+        if (costumeSource.originAsset) {
+            costume.originAsset = costumeSource.originAsset;
+        }
+
         // deserializeCostume should be called on the costume object we're
         // creating above instead of the source costume object, because this way
         // we're always loading the 'sb3' representation of the costume
