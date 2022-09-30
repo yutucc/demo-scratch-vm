@@ -406,11 +406,23 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * 保存当前舞台区域的渲染宽高
+     * 通过下面的 getter / setter 进行获取以及修改
+     * PS:
+     *   这里这套 stageNativeSize 的逻辑跟 scratch-svg-renderer 库的 src/bitmap-adapter.js 的 BitmapAdapter 中的是一样的
+     *   暂时没有想到其它方法，只能在两个地方维护同一套逻辑，只是给不同的 class 使用
+     *   scratch-svg-renderer 的 stageNativeSize 是处理上传背景图以及更换背景尺寸时做适配
+     *   这里的 stageNativeSize 是为了给保存工程文件以及加载工程文件是，可以顺利根据工程文件的 stageNativeSize 进行舞台的初始化使用
+     */
+    static stageNativeSize = [480, 360];
+
+    /**
      * Width of the stage, in pixels.
      * @const {number}
      */
     static get STAGE_WIDTH () {
-        return 480;
+        // return 480; 原本是固定数值
+        return Runtime.stageNativeSize[0];
     }
 
     /**
@@ -418,6 +430,39 @@ class Runtime extends EventEmitter {
      * @const {number}
      */
     static get STAGE_HEIGHT () {
+        // return 360; 原本是固定数值
+        return Runtime.stageNativeSize[1];
+    }
+
+    /**
+     * 设置舞台区域的渲染宽度
+     * @const {number}
+     */
+    static set STAGE_WIDTH (value) {
+        Runtime.stageNativeSize[0] = value;
+    }
+
+    /**
+     * 设置舞台区域的渲染高度
+     * @const {number}
+     */
+    static set STAGE_HEIGHT (value) {
+        Runtime.stageNativeSize[1] = value;
+    }
+
+    /**
+     * 官网 scratch 舞台区域宽度像素大小
+     * @const {number}
+     */
+    static get OFFICIAL_STAGE_WIDTH () {
+        return 480;
+    }
+
+    /**
+     * 官网 scratch 舞台区域高度像素大小
+     * @const {number}
+     */
+    static get OFFICIAL_STAGE_HEIGHT () {
         return 360;
     }
 
@@ -2642,6 +2687,39 @@ class Runtime extends EventEmitter {
      */
     updateCurrentMSecs () {
         this.currentMSecs = Date.now();
+    }
+
+    /**
+     * 设置 render 舞台区域的渲染宽高[width, height]
+     * @param {number} width StageNativeSize width
+     * @param {number} height StageNativeSize height
+     */
+    setStageNativeSize (width, height) {
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+
+        this.renderer.setStageSize(-halfWidth, halfWidth, -halfHeight, halfHeight);
+        this.renderer.resize(width, height);
+
+        // RenderedTarget.setStageNativeSize([width, height]);
+        // 改版，将 stageNativeSize 相关逻辑放在 Runtime.js 中
+        Runtime.STAGE_WIDTH = width;
+        Runtime.STAGE_HEIGHT = height;
+
+        // 如果已经生成网格，销毁后再重新生成一个新的网格
+        // 一定程度上，这个方案有点取巧。我猜修改舞台尺寸后会修改舞台的 gl 的宽高（或者说的上下文），导致如果延用旧的网格皮肤，会有问题
+        if (this._checkerSkinId) {
+            const prevCheckerVisible = this.renderer.getCheckerVisible(this._checkerDrawableId); // 记录销毁前网格的可见状态
+
+            // 如果是 null，说明 this._checkerDrawableId 这个 id 没有映射到正确的对象上（一般情况下不会出现这种情况）
+            if (prevCheckerVisible === null) {
+                return;
+            }
+
+            this.renderer.destroyDrawable(this._checkerDrawableId, StageLayering.BACKGROUND_LAYER); // 销毁掉之前的网格
+            this._createChecker(); // 重新绘制网格
+            this._setCheckerVisible(prevCheckerVisible);
+        }
     }
 }
 

@@ -47,7 +47,7 @@ class VirtualMachine extends EventEmitter {
     constructor () {
         super();
 
-        console.log('demo-scratch-vm');
+        console.log('demo-scratch-vm 111');
 
         /**
          * VM runtime, to store blocks, I/O devices, sprites/targets, etc.

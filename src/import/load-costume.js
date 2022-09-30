@@ -10,7 +10,7 @@ const loadVector_ = function (costume, runtime, rotationCenter, optVersion) {
             // scratch-svg-renderer fixes syntax that causes loading issues,
             // and if optVersion is 2, fixes "quirks" associated with Scratch 2 SVGs,
             const fixedSvgString = serializeSvgToString(loadSvgString(svgString, true /* fromVersion2 */));
-        
+
             // If the string changed, put back into storage
             if (svgString !== fixedSvgString) {
                 svgString = fixedSvgString;
@@ -261,14 +261,14 @@ const handleCostumeLoadError = function (costume, runtime) {
 
     const AssetType = runtime.storage.AssetType;
     const isVector = costume.dataFormat === AssetType.ImageVector.runtimeFormat;
-                
+
     // Use default asset if original fails to load
     costume.assetId = isVector ?
         runtime.storage.defaultAssetId.ImageVector :
         runtime.storage.defaultAssetId.ImageBitmap;
     costume.asset = runtime.storage.get(costume.assetId);
     costume.md5 = `${costume.assetId}.${costume.asset.dataFormat}`;
-    
+
     const defaultCostumePromise = (isVector) ?
         loadVector_(costume, runtime) : loadBitmap_(costume, runtime);
 
@@ -280,7 +280,7 @@ const handleCostumeLoadError = function (costume, runtime) {
         // Should be null if we got here because the costume was missing
         loadedCostume.broken.asset = oldAsset;
         loadedCostume.broken.dataFormat = oldDataFormat;
-        
+
         loadedCostume.broken.rotationCenterX = oldRotationX;
         loadedCostume.broken.rotationCenterY = oldRotationY;
         loadedCostume.broken.bitmapResolution = oldBitmapResolution;
@@ -322,7 +322,7 @@ const loadCostumeFromAsset = function (costume, runtime, optVersion) {
             .catch(error => {
                 log.warn(`Error loading vector image: ${error}`);
                 return handleCostumeLoadError(costume, runtime);
-                
+
             });
     }
     return loadBitmap_(costume, runtime, rotationCenter, optVersion)
@@ -381,7 +381,15 @@ const loadCostume = function (md5ext, costume, runtime, optVersion) {
         textLayerPromise = Promise.resolve(null);
     }
 
-    return Promise.all([costumePromise, textLayerPromise])
+    // 增加多一个背景图的原图资源的加载任务，如果有 originAsset 字段，则增加这个，用于加载背景图的原图
+    let originAssetPromise;
+    if (costume.originAsset) {
+        originAssetPromise = runtime.storage.load(assetType, costume.originAsset.assetId, ext);
+    } else {
+        originAssetPromise = Promise.resolve(null);
+    }
+
+    return Promise.all([costumePromise, textLayerPromise, originAssetPromise])
         .then(assetArray => {
             if (assetArray[0]) {
                 costume.asset = assetArray[0];
@@ -391,6 +399,11 @@ const loadCostume = function (md5ext, costume, runtime, optVersion) {
 
             if (assetArray[1]) {
                 costume.textLayerAsset = assetArray[1];
+            }
+
+            // assetArray[2]，是背景图的原图，对应originAssetPromise
+            if (assetArray[2]) {
+                costume.originAsset = assetArray[2];
             }
             return loadCostumeFromAsset(costume, runtime, optVersion);
         })

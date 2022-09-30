@@ -21,6 +21,8 @@ const {loadCostume} = require('../import/load-costume.js');
 const {loadSound} = require('../import/load-sound.js');
 const {deserializeCostume, deserializeSound} = require('./deserialize-assets.js');
 
+const Runtime = require('../engine/runtime');
+
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
@@ -376,6 +378,13 @@ const serializeCostume = function (costume) {
     obj.rotationCenterX = costumeToSerialize.rotationCenterX;
     obj.rotationCenterY = costumeToSerialize.rotationCenterY;
 
+    // 如果有 originAsset 字段（保存背景原图的 Asset 资源对象信息（assetId）），带上
+    if (costume.originAsset) {
+        obj.originAsset = {
+            assetId: costume.originAsset.assetId,
+        }
+    }
+
     return obj;
 };
 
@@ -501,6 +510,11 @@ const serializeTarget = function (target, extensions) {
         obj.draggable = target.draggable;
         obj.rotationStyle = target.rotationStyle;
         obj.isInvisible = target.isInvisible; // 新增 isInvisible 属性
+    }
+
+    // 将 stageNativeSize 保存到工程文件中
+    if (target.hasOwnProperty('stageNativeSize')) {
+        obj.stageNativeSize = target.stageNativeSize;
     }
 
     // Add found extensions to the extensions object
@@ -1098,6 +1112,27 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets) {
     }
     if (object.hasOwnProperty('draggable')) {
         target.draggable = object.draggable;
+    }
+
+    // 解析 stageNativeSize 字段，有这个字段的话，就将其放在对应的 RenderedTarget 对象中
+    // PS：
+    //     按理来说，stageNativeSize 应该存储在 RenderedTarget 的 class 上，作为一个静态属性，
+    //     这里为了方便，直接放在 RenderedTarget的对象中（只有舞台的 RenderedTarget对象有这个值），
+    //     然后在 gui 中执行 stageNativeSize 的设置流程
+    // if (object.hasOwnProperty('stageNativeSize')) {
+    //     target.stageNativeSize = object.stageNativeSize;
+    // }
+    // 改版，将 stageNativeSize 相关逻辑放在 Runtime.js 中
+    // 解析 stageNativeSize 字段，有这个字段的话，就将其放在对应的 Runtime 中
+    if (object.hasOwnProperty('stageNativeSize') && object.stageNativeSize.length && (object.stageNativeSize.length === 2)) {
+        Runtime.STAGE_WIDTH = object.stageNativeSize[0];
+        Runtime.STAGE_HEIGHT = object.stageNativeSize[1];
+    } else {
+        // 如果工程文件中没有 stageNativeSize 字段，说明大概率是官网 scratch 生成的 .sb3 文件，使用官方默认的舞台尺寸
+        if (target.isStage) {
+            Runtime.STAGE_WIDTH = Runtime.OFFICIAL_STAGE_WIDTH;
+            Runtime.STAGE_HEIGHT = Runtime.OFFICIAL_STAGE_HEIGHT;
+        }
     }
 
     // 新增 isInvisible 属性

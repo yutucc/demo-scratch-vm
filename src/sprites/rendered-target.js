@@ -1078,7 +1078,7 @@ class RenderedTarget extends Target {
      */
     toJSON () {
         const costumes = this.getCostumes();
-        return {
+        const result = {
             id: this.id,
             name: this.getName(),
             isStage: this.isStage,
@@ -1104,6 +1104,15 @@ class RenderedTarget extends Target {
             videoState: this.videoState,
             isInvisible: this.isInvisible,
         };
+
+        // 如果是舞台对象，保存 stageNativeSize 字段到工程文件中
+        if (this.isStage) {
+            // result.stageNativeSize = RenderedTarget.stageNativeSize;
+            // 改版，将 stageNativeSize 相关逻辑放在 Runtime.js 中
+            result.stageNativeSize = [this.runtime.constructor.STAGE_WIDTH, this.runtime.constructor.STAGE_HEIGHT];
+        }
+
+        return result;
     }
 
     /**
